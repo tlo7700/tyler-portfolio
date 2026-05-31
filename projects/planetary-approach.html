@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planetary Approach - Tyler Lopez</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── ROOT VARIABLES ── */
+    :root {
+      --bg:         #0c0b09;
+      --bg2:        #131210;
+      --bg3:        #1a1916;
+      --border:     rgba(200,169,110,0.18);
+      --gold:       #c8a96e;
+      --gold-dim:   rgba(200,169,110,0.45);
+      --gold-glow:  rgba(200,169,110,0.08);
+      --text:       #e8e2d9;
+      --text-dim:   #8a847a;
+      --text-faint: #4a4640;
+      --mono:       'DM Mono', monospace;
+      --serif:      'Cormorant Garamond', serif;
+      --display:    'Bebas Neue', sans-serif;
+      --gap:        clamp(1.5rem, 4vw, 3rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-weight: 300;
+      font-size: clamp(13px, 1.4vw, 15px);
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    a { color: var(--gold); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.7; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.028;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-block: var(--gap);
+    }
+    .rule::before, .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .rule span {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      white-space: nowrap;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.4rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(12,11,9,0.95) 0%, transparent 100%);
+    }
+    .nav-logo { font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.12em; color: var(--text); }
+    .nav-logo span { color: var(--gold); }
+    .nav-back {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--text-dim); transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--gold); opacity: 1; }
+    .nav-back::before { content: '←'; font-size: 0.85rem; }
+
+    /* ── HERO ── */
+    #project-hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: clamp(3rem, 6vw, 5rem);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-media { position: absolute; inset: 0; z-index: 0; }
+    .hero-embed { width: 100%; height: 100%; position: relative; overflow: hidden; }
+    .hero-embed iframe {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 177.78vh;
+      height: 56.25vw;
+      min-width: 100%;
+      min-height: 100%;
+      border: none;
+      opacity: 0.65;
+    }
+    .hero-media::after {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(to top, var(--bg) 0%, transparent 50%),
+        linear-gradient(to right, rgba(12,11,9,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse at center, transparent 30%, rgba(12,11,9,0.45) 100%);
+    }
+    .hero-content {
+      position: relative; z-index: 1;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+    .hero-eyebrow {
+      font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .hero-eyebrow::before { content: ''; display: block; width: 2rem; height: 1px; background: var(--gold); }
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      line-height: 0.92; letter-spacing: 0.03em;
+      color: var(--text); margin-bottom: 1.5rem;
+    }
+    h1 em {
+      font-family: var(--serif); font-style: italic; font-weight: 300;
+      color: var(--gold); font-size: 0.5em; display: block;
+      letter-spacing: 0.08em; margin-top: 0.4rem;
+    }
+    .hero-meta { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .hero-meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .hero-meta-label { font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-faint); }
+    .hero-meta-val { font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.05em; }
+
+    /* ── SECTIONS ── */
+    section { padding-block: clamp(4rem, 8vw, 7rem); }
+    .section-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 0.5rem; }
+    h2 { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.8rem); letter-spacing: 0.05em; line-height: 1; color: var(--text); }
+
+    /* ── PROJECT BODY ── */
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: clamp(3rem, 6vw, 6rem);
+      align-items: start;
+      margin-top: 3rem;
+    }
+    .body-lead {
+      font-family: var(--serif);
+      font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+      line-height: 1.65; font-weight: 300; color: var(--text);
+    }
+    .body-lead em { color: var(--gold); font-style: italic; }
+    .body-right { display: flex; flex-direction: column; gap: 1.8rem; }
+    .body-para { font-size: 0.8rem; color: var(--text-dim); line-height: 1.95; }
+
+    /* ── CALLOUT ── */
+    .callout {
+      margin-top: clamp(3rem, 5vw, 5rem);
+      border-left: 2px solid var(--gold-dim);
+      padding: 1.75rem 2rem;
+      background: var(--bg2);
+    }
+    .callout-label { font-size: 0.55rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem; }
+    .callout-text { font-family: var(--serif); font-size: clamp(1rem, 2vw, 1.3rem); font-style: italic; font-weight: 300; color: var(--text); line-height: 1.7; }
+
+    /* ── TAGS ── */
+    .software-row { margin-top: 2.5rem; display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    .software-label { font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-faint); white-space: nowrap; }
+    .tag { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); border: 1px solid var(--text-faint); padding: 0.2rem 0.55rem; transition: color 0.2s, border-color 0.2s; }
+    .tag.gold { color: var(--gold-dim); border-color: var(--border); }
+    .tag:hover { color: var(--gold-dim); border-color: var(--border); }
+
+    /* ── SUPPLEMENTAL / VIDEO SECTION ── */
+    #project-photos {
+      padding-block: clamp(3rem, 6vw, 5rem);
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .photos-header { margin-bottom: 2.5rem; }
+    .section-video { position: relative; width: 100%; aspect-ratio: 16/9; background: var(--bg3); overflow: hidden; }
+    .section-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+
+    /* ── PROJECT NAV ── */
+    #project-nav { padding-block: clamp(3rem, 5vw, 4.5rem); }
+    .project-nav-inner { display: flex; justify-content: space-between; align-items: center; }
+    .project-nav-link { display: flex; flex-direction: column; gap: 0.35rem; }
+    .project-nav-link .nav-dir { font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-faint); }
+    .project-nav-link .nav-title { font-family: var(--display); font-size: clamp(1rem, 2.5vw, 1.5rem); letter-spacing: 0.05em; color: var(--text); transition: color 0.2s; }
+    .project-nav-link:hover .nav-title { color: var(--gold); opacity: 1; }
+    .project-nav-link.right { text-align: right; }
+
+    /* ── FOOTER ── */
+    footer { padding: 2rem clamp(1.25rem, 5vw, 4rem); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); }
+    footer .footer-name { font-family: var(--display); font-size: 0.9rem; letter-spacing: 0.12em; color: var(--text-faint); }
+    footer .footer-note { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+    .hero-eyebrow { animation: fadeUp 0.8s ease both; animation-delay: 0.2s; }
+    h1            { animation: fadeUp 0.8s ease both; animation-delay: 0.35s; }
+    .hero-meta    { animation: fadeUp 0.8s ease both; animation-delay: 0.5s; }
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .body-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    }
+    @media (max-width: 500px) {
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="../index.html" class="nav-logo">Tyler <span>Lopez</span></a>
+    <a href="../index.html#projects" class="nav-back">All Work</a>
+  </nav>
+
+  <!-- PROJECT HERO — Vimeo as full-bleed background -->
+  <section id="project-hero">
+    <div class="hero-media">
+      <div class="hero-embed">
+        <iframe
+          src="https://player.vimeo.com/video/1197173243?badge=0&background=1&autoplay=1&loop=1&muted=1"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+          referrerpolicy="strict-origin-when-cross-origin">
+        </iframe>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">// 002 - Real-Time Cinematic</div>
+      <h1>
+        Planetary Approach
+        <em>Unreal Engine 5 · Cinematics · Environment Art</em>
+      </h1>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Engine</span>
+          <span class="hero-meta-val">Unreal Engine 5</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Type</span>
+          <span class="hero-meta-val">Real-Time Planetary Cinematic</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Discipline</span>
+          <span class="hero-meta-val">Environment Art · Lighting · Cinematics</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT BODY -->
+  <section id="project-body">
+    <div class="wrap">
+
+      <div class="body-grid reveal">
+
+        <!-- LEFT: Lead -->
+        <div>
+          <div class="section-label">// Overview</div>
+          <p class="body-lead">
+            A <em>two-shot real-time cinematic</em> built entirely in Unreal Engine 5,
+            designed to demonstrate shot-to-shot lighting continuity, large-scale
+            environment composition, and character integration in a live engine context.
+          </p>
+        </div>
+
+        <!-- RIGHT: Body -->
+        <div class="body-right">
+          <p class="body-para">
+            The environment is two shots, a gas giant and an astronaut adrift in its shadow. Rather than building tension through action, the scale does the work. The planet fills the frame not as a backdrop but as a presence, something indifferent and enormous. The astronaut isn't moving toward anything. He's just there, small against something that doesn't register him at all. The silence isn't empty. It has weight.
+          </p>
+          <p class="body-para">
+            The lighting language had to hold across both cuts. The gas giant doubles as the key light source, a green-tinted rim wrapping the astronaut suit from behind, keeping the character readable against the planet surface without breaking the mood. That continuity was the primary technical challenge: making a single environmental light source feel consistent across a cut to a completely different composition.
+          </p>
+          <p class="body-para">
+            The planet material was built procedurally in Blender using noise and color ramp nodes to generate the band structure, then baked and brought into UE5 as a texture applied to a subdivided cube mesh, with UV layouts matched by exporting the same mesh used for baking. Atmospheric glow at the planet limb is a Fresnel-driven emissive in the UE5 material graph.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- KEY CHALLENGE CALLOUT -->
+      <div class="callout reveal">
+        <div class="callout-label">Focus</div>
+        <p class="callout-text">
+          Maintaining lighting continuity across a cut, using a single planetary light source to key and rim the astronaut across two compositions without breaking the silence of the scene.
+        </p>
+      </div>
+
+      <!-- ROLE / TOOLS -->
+      <div class="reveal" style="margin-top:2.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; border-top:1px solid var(--border); padding-top:2rem;">
+        <div>
+          <div class="section-label">// Role</div>
+          <p class="body-para">Sole author: environment art, planet shading, lighting, camera animation, and sequence editing.</p>
+        </div>
+        <div>
+          <div class="section-label">// Tools Used</div>
+          <p class="body-para">Unreal Engine 5 · Sequencer · Blender (procedural bake) · Premiere</p>
+        </div>
+      </div>
+
+      <!-- SOFTWARE TAGS -->
+      <div class="software-row reveal">
+        <span class="software-label">Software</span>
+        <span class="tag gold">Unreal Engine 5</span>
+        <span class="tag gold">Blender</span>
+        <span class="tag">Sequencer</span>
+        <span class="tag">Procedural Materials</span>
+        <span class="tag">Environment Art</span>
+        <span class="tag">Cinematics</span>
+        <span class="tag">Lighting</span>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>Cinematic</span></div></div>
+
+  <!-- EMBEDDED VIDEO -->
+  <section id="project-photos">
+    <div class="wrap">
+      <div class="photos-header reveal">
+        <div class="section-label">// Full Cinematic</div>
+        <h2>Planetary Approach</h2>
+      </div>
+
+      <div class="section-video reveal">
+        <iframe
+          src="https://player.vimeo.com/video/1197173243?badge=0&autopause=0&player_id=0&app_id=58479"
+          frameborder="0"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          title="Planetary Approach"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+
+    </div>
+  </section>
+
+  <!-- PROJECT NAV -->
+  <section id="project-nav">
+    <div class="wrap">
+      <div class="project-nav-inner reveal">
+        <a href="flood-falls.html" class="project-nav-link">
+          <span class="nav-dir">← Previous</span>
+          <span class="nav-title">Flood Falls</span>
+        </a>
+        <a href="4d-splat-pipeline.html" class="project-nav-link right">
+          <span class="nav-dir">Next Project →</span>
+          <span class="nav-title">4D Splat Pipeline</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-name">Tyler Lopez</div>
+    <div class="footer-note">Vancouver, BC &nbsp;·&nbsp; Technical Cinematics &amp; VFX &nbsp;·&nbsp; 2025</div>
+  </footer>
+
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          let delay = 0;
+          siblings.forEach((sib, idx) => { if (sib === entry.target) delay = idx * 80; });
+          setTimeout(() => entry.target.classList.add('visible'), delay);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

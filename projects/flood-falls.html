@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flood Falls - Tyler Lopez</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── ROOT VARIABLES ── */
+    :root {
+      --bg:         #0c0b09;
+      --bg2:        #131210;
+      --bg3:        #1a1916;
+      --border:     rgba(200,169,110,0.18);
+      --gold:       #c8a96e;
+      --gold-dim:   rgba(200,169,110,0.45);
+      --gold-glow:  rgba(200,169,110,0.08);
+      --text:       #e8e2d9;
+      --text-dim:   #8a847a;
+      --text-faint: #4a4640;
+      --mono:       'DM Mono', monospace;
+      --serif:      'Cormorant Garamond', serif;
+      --display:    'Bebas Neue', sans-serif;
+      --gap:        clamp(1.5rem, 4vw, 3rem);
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-weight: 300;
+      font-size: clamp(13px, 1.4vw, 15px);
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    a { color: var(--gold); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.7; }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.028;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── LAYOUT WRAPPER ── */
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+
+    /* ── RULE ELEMENTS ── */
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-block: var(--gap);
+    }
+    .rule::before, .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .rule span {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      white-space: nowrap;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.4rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(12,11,9,0.95) 0%, transparent 100%);
+    }
+
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--gold); }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--gold); opacity: 1; }
+    .nav-back::before { content: '←'; font-size: 0.85rem; }
+
+    /* ── PROJECT HERO ── */
+    #project-hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: clamp(3rem, 6vw, 5rem);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* Video embed container */
+    .hero-embed { position: absolute; inset: 0; overflow: hidden; }
+    .hero-embed iframe {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 56.25vw;
+      min-height: 100vh;
+      min-width: 177.78vh;
+      border: none;
+      opacity: 0.65;
+    }
+
+    /* Placeholder when no video yet */
+    .hero-placeholder {
+      width: 100%;
+      height: 100%;
+      background: var(--bg3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Vignette over hero media */
+    .hero-media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, var(--bg) 0%, transparent 50%),
+        linear-gradient(to right, rgba(12,11,9,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse at center, transparent 30%, rgba(12,11,9,0.45) 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+
+    .hero-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 2rem;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      line-height: 0.92;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    h1 em {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--gold);
+      font-size: 0.5em;
+      display: block;
+      letter-spacing: 0.08em;
+      margin-top: 0.4rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .hero-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .hero-meta-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .hero-meta-val {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── SECTION BASE ── */
+    section { padding-block: clamp(4rem, 8vw, 7rem); }
+
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: var(--display);
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    /* ── PROJECT BODY ── */
+    #project-body {
+      padding-block: clamp(4rem, 8vw, 7rem);
+    }
+
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: clamp(3rem, 6vw, 6rem);
+      align-items: start;
+      margin-top: 3rem;
+    }
+
+    .body-lead {
+      font-family: var(--serif);
+      font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+      line-height: 1.65;
+      font-weight: 300;
+      color: var(--text);
+    }
+    .body-lead em { color: var(--gold); font-style: italic; }
+
+    .body-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    .body-para {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.95;
+    }
+
+    /* ── KEY CHALLENGE CALLOUT ── */
+    .callout {
+      margin-top: clamp(3rem, 5vw, 5rem);
+      border-left: 2px solid var(--gold-dim);
+      padding: 1.75rem 2rem;
+      background: var(--bg2);
+    }
+
+    .callout-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+
+    .callout-text {
+      font-family: var(--serif);
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── SOFTWARE TAGS ── */
+    .software-row {
+      margin-top: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .software-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      white-space: nowrap;
+    }
+
+    .tag {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      border: 1px solid var(--text-faint);
+      padding: 0.2rem 0.55rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tag.gold { color: var(--gold-dim); border-color: var(--border); }
+    .tag:hover { color: var(--gold-dim); border-color: var(--border); }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      margin-top: clamp(2.5rem, 4vw, 4rem);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .stat-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.75rem 1rem;
+      gap: 0.4rem;
+    }
+
+    .stat-num {
+      font-family: var(--display);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      letter-spacing: 0.05em;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      text-align: center;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 3rem;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .stats-strip { flex-wrap: wrap; }
+      .stat-item { flex-basis: 50%; }
+      .stat-divider { display: none; }
+    }
+
+    /* ── SUPPLEMENTAL PHOTOS ── */
+    #project-photos {
+      padding-block: clamp(3rem, 6vw, 5rem);
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .photos-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .supp-photo {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--bg3);
+      aspect-ratio: 16/9;
+    }
+
+    .supp-photo.portrait { aspect-ratio: 3/4; }
+    .supp-photo.square   { aspect-ratio: 1/1; }
+
+    .supp-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.55s ease, filter 0.4s ease;
+      filter: saturate(1) brightness(1);
+    }
+    .supp-photo:hover img {
+      transform: scale(1.04);
+      filter: saturate(0.75) brightness(0.9);
+    }
+
+    .supp-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+
+    .supp-caption {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(12,11,9,0.82) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.35s;
+      display: flex;
+      align-items: flex-end;
+      padding: 1rem;
+    }
+    .supp-photo:hover .supp-caption { opacity: 1; }
+    .supp-caption span {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── PROJECT NAV (next/prev) ── */
+    #project-nav {
+      padding-block: clamp(3rem, 5vw, 4.5rem);
+    }
+
+    .project-nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .project-nav-link {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .project-nav-link .nav-dir {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .project-nav-link .nav-title {
+      font-family: var(--display);
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      letter-spacing: 0.05em;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+    .project-nav-link:hover .nav-title { color: var(--gold); opacity: 1; }
+    .project-nav-link.right { text-align: right; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 2rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    footer .footer-name {
+      font-family: var(--display);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+    }
+    footer .footer-note {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-eyebrow { animation: fadeUp 0.8s ease both; animation-delay: 0.2s; }
+    h1            { animation: fadeUp 0.8s ease both; animation-delay: 0.35s; }
+    .hero-meta    { animation: fadeUp 0.8s ease both; animation-delay: 0.5s; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── VIDEO EMBED ── */
+    #project-video {
+      padding-block: clamp(4rem, 8vw, 7rem);
+    }
+
+    .video-header {
+      margin-bottom: 2rem;
+    }
+
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── SPLAT VIEWER ── */
+    #splat-viewer {
+      padding-block: clamp(4rem, 8vw, 7rem);
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .viewer-header {
+      margin-bottom: 2rem;
+    }
+
+    .viewer-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .viewer-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .body-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 500px) {
+      .photo-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="../index.html" class="nav-logo">Tyler <span>Lopez</span></a>
+    <a href="../index.html#projects" class="nav-back">All Work</a>
+  </nav>
+
+  <!-- PROJECT HERO -->
+  <section id="project-hero">
+    <div class="hero-media">
+      <!--
+        ╔══════════════════════════════════════════════════════╗
+        ║  MAIN VIDEO / RENDER — replace with your embed      ║
+        ║  Vimeo: https://player.vimeo.com/video/YOUR_ID      ║
+        ║  Add: ?background=1&autoplay=1&loop=1&muted=1       ║
+        ╚══════════════════════════════════════════════════════╝
+      -->
+      <div class="hero-embed">
+        <iframe
+          src="https://player.vimeo.com/video/1180173407?background=1&autoplay=1&loop=1&muted=1"
+          allow="autoplay; fullscreen" allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">// 001 - Location Capture</div>
+      <h1>
+        Flood Falls
+        <em>LiDAR · UAV Photogrammetry · RealityCapture</em>
+      </h1>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Studio</span>
+          <span class="hero-meta-val">Industrial Pixel 3D Studios</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Role</span>
+          <span class="hero-meta-val">Lead 3D Data Capture Tech</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Location</span>
+          <span class="hero-meta-val">Hope, BC · Skagit Valley</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Type</span>
+          <span class="hero-meta-val">Internal R&amp;D · Pipeline Development</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Discipline</span>
+          <span class="hero-meta-val">Multi-Modal Location Capture</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT BODY -->
+  <section id="project-body">
+    <div class="wrap">
+
+      <div class="body-grid reveal">
+
+        <!-- LEFT: Lead paragraph -->
+        <div>
+          <div class="section-label">// Overview</div>
+          <p class="body-lead">
+            A 360-meter waterfall near Highway 1 in <em>Hope, British Columbia</em>,
+            captured in under three hours using a three-part hybrid pipeline to prove
+            that no environment is too extreme for production-ready digital capture.
+          </p>
+        </div>
+
+        <!-- RIGHT: Body paragraphs -->
+        <div class="body-right">
+          <p class="body-para">
+            Flood Falls presented a combination of constraints rarely found in a single
+            location: all equipment had to be carried in on foot along a hiking trail,
+            the site was publicly accessible requiring minimal disruption, and the waterfall
+            itself, over 360 meters tall, far exceeded what any ground-based LiDAR
+            scanner could cover alone. Solving it required deploying three capture methods
+            simultaneously against a tight daylight window.
+          </p>
+          <p class="body-para">
+            Terrestrial LiDAR gathered dense, geometrically accurate point cloud data
+            across the base terrain and rock formations — 22 individual scan positions in
+            total. A drone flew vertical passes in overlapping grids to photograph the
+            entire cliff face from elevations unreachable on foot, with handheld
+            photogrammetry bridging the gap between datasets. A third pass with a DSLR
+            captured high-resolution texture reference for look development and VFX
+            workflows. All three were registered and merged in RealityCapture into a
+            single unified asset.
+          </p>
+          <p class="body-para">
+            The resulting deliverable — built from 1,076 photographs and 22 laser scans —
+            is production-ready for VFX tracking, real-time game engines, and digital
+            doubles. A camera matchmove performed on top of the combined scan data
+            validated the asset's viability as an on-set location reference, where a
+            single capture method never covers the full environment.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- KEY CHALLENGE CALLOUT -->
+      <div class="callout reveal">
+        <div class="callout-label">Key Challenge</div>
+        <p class="callout-text">
+          A 360-meter vertical subject that ground-based LiDAR physically cannot see,
+          requiring aerial, terrestrial, and handheld capture to be fused into one
+          coherent asset while working on foot, in public, against a single daylight window.
+        </p>
+      </div>
+
+      <!-- STATS STRIP -->
+      <div class="stats-strip reveal">
+        <div class="stat-item">
+          <span class="stat-num">1,076</span>
+          <span class="stat-label">Photographs</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">22</span>
+          <span class="stat-label">Laser Scan Positions</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">&lt; 3 hrs</span>
+          <span class="stat-label">Total Capture Time</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">360 m</span>
+          <span class="stat-label">Waterfall Height</span>
+        </div>
+      </div>
+
+      <!-- SOFTWARE TAGS -->
+      <div class="software-row reveal">
+        <span class="software-label">Pipeline</span>
+        <span class="tag gold">RealityCapture</span>
+        <span class="tag gold">Faro LiDAR</span>
+        <span class="tag gold">UAV Photogrammetry</span>
+        <span class="tag gold">Handheld Photogrammetry</span>
+        <span class="tag">DSLR Texture Ref</span>
+        <span class="tag">Blender</span>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule reveal"><span>Interactive Model</span></div></div>
+
+  <!-- SPLAT VIEWER -->
+  <section id="splat-viewer">
+    <div class="wrap">
+      <div class="viewer-header reveal">
+        <div class="section-label">// 3D Scan</div>
+        <h2>Explore the Capture</h2>
+      </div>
+      <div class="viewer-frame reveal">
+        <iframe
+          id="viewer"
+          allow="fullscreen; xr-spatial-tracking"
+          src="https://superspl.at/s?id=871a2965">
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule reveal"><span>Video</span></div></div>
+
+  <!-- VIDEO EMBED -->
+  <section id="project-video">
+    <div class="wrap">
+      <div class="video-header reveal">
+        <div class="section-label">// Footage</div>
+        <h2>On Location</h2>
+      </div>
+      <div class="video-frame reveal">
+        <iframe
+          src="https://player.vimeo.com/video/1180173407"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule reveal"><span>Supplemental</span></div></div>
+
+  <!-- SUPPLEMENTAL PHOTOS -->
+  <section id="project-photos">
+    <div class="wrap">
+      <div class="photos-header reveal">
+        <div class="section-label">// Capture &amp; Process</div>
+        <h2>Capture &amp; Process</h2>
+      </div>
+
+      <!--
+        ╔══════════════════════════════════════════════════════════════╗
+        ║  SUPPLEMENTAL PHOTOS                                         ║
+        ║  Replace .supp-placeholder divs with:                        ║
+        ║  <img src="../assets/images/flood-falls/yourfile.jpg"        ║
+        ║       alt="caption" loading="lazy" />                        ║
+        ║  Add class "portrait" or "square" to .supp-photo for ratio   ║
+        ╚══════════════════════════════════════════════════════════════╝
+      -->
+      <div class="photo-grid reveal">
+
+        <div class="supp-photo">
+          <img src="../assets/images/flood-falls/process/DSC_8905.jpg" alt="Flood Falls — Hope, BC · site overview" loading="lazy" />
+          <div class="supp-caption"><span>Flood Falls — Hope, BC · site overview</span></div>
+        </div>
+
+        <div class="supp-photo">
+          <img src="../assets/images/flood-falls/process/DSC_8906.jpg" alt="Terrestrial LiDAR deployment · base terrain scan" loading="lazy" />
+          <div class="supp-caption"><span>Terrestrial LiDAR deployment · base terrain scan</span></div>
+        </div>
+
+        <div class="supp-photo">
+          <img src="../assets/images/flood-falls/process/DSC_8929.jpg" alt="UAV vertical pass · cliff face photogrammetry" loading="lazy" />
+          <div class="supp-caption"><span>UAV vertical pass · cliff face photogrammetry</span></div>
+        </div>
+
+        <div class="supp-photo">
+          <img src="../assets/images/flood-falls/process/PointCloud_RC.png" alt="Merged point cloud · RealityCapture · 22 scan positions" loading="lazy" />
+          <div class="supp-caption"><span>Merged point cloud · RealityCapture · 22 scan positions</span></div>
+        </div>
+
+        <div class="supp-photo">
+          <img src="../assets/images/flood-falls/process/RC_Mesh.png" alt="RealityCapture mesh reconstruction" loading="lazy" />
+          <div class="supp-caption"><span>RealityCapture mesh reconstruction</span></div>
+        </div>
+
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT NAV -->
+  <section id="project-nav">
+    <div class="wrap">
+      <div class="project-nav-inner reveal">
+        <a href="../index.html#projects" class="project-nav-link">
+          <span class="nav-dir">← Previous</span>
+          <span class="nav-title">All Selected Work</span>
+        </a>
+        <a href="planetary-approach.html" class="project-nav-link right">
+          <span class="nav-dir">Next Project →</span>
+          <span class="nav-title">Planetary Approach</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-name">Tyler Lopez</div>
+    <div class="footer-note">Vancouver, BC &nbsp;·&nbsp; Technical Cinematics &amp; VFX &nbsp;·&nbsp; 2025</div>
+  </footer>
+
+  <!-- SCROLL REVEAL -->
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          let delay = 0;
+          siblings.forEach((sib, idx) => { if (sib === entry.target) delay = idx * 80; });
+          setTimeout(() => entry.target.classList.add('visible'), delay);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

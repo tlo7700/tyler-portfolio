@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4D Splat Pipeline - Tyler Lopez</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:         #0c0b09;
+      --bg2:        #131210;
+      --bg3:        #1a1916;
+      --border:     rgba(200,169,110,0.18);
+      --gold:       #c8a96e;
+      --gold-dim:   rgba(200,169,110,0.45);
+      --gold-glow:  rgba(200,169,110,0.08);
+      --text:       #e8e2d9;
+      --text-dim:   #8a847a;
+      --text-faint: #4a4640;
+      --mono:       'DM Mono', monospace;
+      --serif:      'Cormorant Garamond', serif;
+      --display:    'Bebas Neue', sans-serif;
+      --gap:        clamp(1.5rem, 4vw, 3rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-weight: 300;
+      font-size: clamp(13px, 1.4vw, 15px);
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    a { color: var(--gold); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.7; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.028;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-block: var(--gap);
+    }
+    .rule::before, .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .rule span {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      white-space: nowrap;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.4rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(12,11,9,0.95) 0%, transparent 100%);
+    }
+
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--gold); }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--gold); opacity: 1; }
+    .nav-back::before { content: '←'; font-size: 0.85rem; }
+
+    #project-hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: clamp(3rem, 6vw, 5rem);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .hero-embed { position: absolute; inset: 0; overflow: hidden; }
+    .hero-embed iframe {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 56.25vw;
+      min-height: 100vh;
+      min-width: 177.78vh;
+      border: none;
+      opacity: 0.65;
+    }
+
+    .hero-media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, var(--bg) 0%, transparent 50%),
+        linear-gradient(to right, rgba(12,11,9,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse at center, transparent 30%, rgba(12,11,9,0.45) 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+
+    .hero-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 2rem;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      line-height: 0.92;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    h1 em {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--gold);
+      font-size: 0.5em;
+      display: block;
+      letter-spacing: 0.08em;
+      margin-top: 0.4rem;
+    }
+
+    .hero-meta { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .hero-meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .hero-meta-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .hero-meta-val {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    section { padding-block: clamp(4rem, 8vw, 7rem); }
+
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: var(--display);
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    #project-body { padding-block: clamp(4rem, 8vw, 7rem); }
+
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: clamp(3rem, 6vw, 6rem);
+      align-items: start;
+      margin-top: 3rem;
+    }
+
+    .body-lead {
+      font-family: var(--serif);
+      font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+      line-height: 1.65;
+      font-weight: 300;
+      color: var(--text);
+    }
+    .body-lead em { color: var(--gold); font-style: italic; }
+
+    .body-right { display: flex; flex-direction: column; gap: 1.8rem; }
+
+    .body-para {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.95;
+    }
+
+    .callout {
+      margin-top: clamp(3rem, 5vw, 5rem);
+      border-left: 2px solid var(--gold-dim);
+      padding: 1.75rem 2rem;
+      background: var(--bg2);
+    }
+    .callout-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+    .callout-text {
+      font-family: var(--serif);
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .software-row {
+      margin-top: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .software-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      white-space: nowrap;
+    }
+    .tag {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      border: 1px solid var(--text-faint);
+      padding: 0.2rem 0.55rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tag.gold { color: var(--gold-dim); border-color: var(--border); }
+    .tag:hover { color: var(--gold-dim); border-color: var(--border); }
+
+    .stats-strip {
+      margin-top: clamp(2.5rem, 4vw, 4rem);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .stat-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.75rem 1rem;
+      gap: 0.4rem;
+    }
+    .stat-num {
+      font-family: var(--display);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      letter-spacing: 0.05em;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      text-align: center;
+    }
+    .stat-divider {
+      width: 1px;
+      height: 3rem;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* Pipeline diagram section */
+    #pipeline-diagram {
+      padding-block: clamp(4rem, 8vw, 7rem);
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .diagram-frame {
+      margin-top: 2rem;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--bg3);
+    }
+    .diagram-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    #project-video { padding-block: clamp(4rem, 8vw, 7rem); }
+    .video-header { margin-bottom: 2rem; }
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    #project-nav { padding-block: clamp(3rem, 5vw, 4.5rem); }
+    .project-nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .project-nav-link { display: flex; flex-direction: column; gap: 0.35rem; }
+    .project-nav-link .nav-dir {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .project-nav-link .nav-title {
+      font-family: var(--display);
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      letter-spacing: 0.05em;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+    .project-nav-link:hover .nav-title { color: var(--gold); opacity: 1; }
+    .project-nav-link.right { text-align: right; }
+
+    footer {
+      padding: 2rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    footer .footer-name {
+      font-family: var(--display);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+    }
+    footer .footer-note {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-eyebrow { animation: fadeUp 0.8s ease both; animation-delay: 0.2s; }
+    h1            { animation: fadeUp 0.8s ease both; animation-delay: 0.35s; }
+    .hero-meta    { animation: fadeUp 0.8s ease both; animation-delay: 0.5s; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      .body-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    }
+    @media (max-width: 600px) {
+      .stats-strip { flex-wrap: wrap; }
+      .stat-item { flex-basis: 50%; }
+      .stat-divider { display: none; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="../index.html" class="nav-logo">Tyler <span>Lopez</span></a>
+    <a href="../index.html#projects" class="nav-back">All Work</a>
+  </nav>
+
+  <!-- PROJECT HERO -->
+  <section id="project-hero">
+    <div class="hero-media">
+      <div class="hero-embed">
+        <iframe
+          src="https://player.vimeo.com/video/1197054606?h=db55ba158e&badge=0&autopause=0&background=1&autoplay=1&loop=1&muted=1"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">// 003 - R&amp;D Pipeline</div>
+      <h1>
+        4D Splat Pipeline
+        <em>LichtFeld Studio · RealityCapture · Multi-Cam Sync · Gaussian Splats</em>
+      </h1>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Studio</span>
+          <span class="hero-meta-val">Industrial Pixel 3D Studios</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Role</span>
+          <span class="hero-meta-val">Pipeline R&amp;D Lead</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Type</span>
+          <span class="hero-meta-val">Internal R&amp;D · Volumetric Capture</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Discipline</span>
+          <span class="hero-meta-val">4D Gaussian Splatting · Volumetric Capture · VFX Pipeline</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT BODY -->
+  <section id="project-body">
+    <div class="wrap">
+
+      <div class="body-grid reveal">
+        <div>
+          <div class="section-label">// Overview</div>
+          <p class="body-lead">
+            An end-to-end <em>4D Gaussian splat pipeline</em> built for production VFX
+            deliverables: 90 synchronized cameras, locked registration across every
+            frame, and full-resolution training at scale.
+          </p>
+        </div>
+
+        <div class="body-right">
+          <p class="body-para">
+            The pipeline started with Nerfstudio's splatfacto, training each frame
+            independently. It proved the concept but the problems were immediate.
+            Nerfstudio silently downscales source images during training, killing
+            reconstruction fidelity before a single Gaussian is placed. On top of
+            that, every independent per-frame solve produces its own arbitrary
+            coordinate space with no shared temporal reference. The output looked
+            like a flipbook from a different dimension each frame.
+          </p>
+          <p class="body-para">
+            The rebuilt pipeline uses LichtFeld Studio as the sole training backend,
+            driven entirely from the command line. RealityCapture handles master
+            camera registration across the full 90-camera rig, exporting ST map EXRs
+            for per-camera lens undistortion. Those calibrated poses are locked and
+            reused across every frame, with no per-frame triangulation. LichtFeld trains
+            each frame against the same master sparse reconstruction, so every frame
+            lives in the same world space at full source resolution.
+          </p>
+          <p class="body-para">
+            The production dataset runs 90 synchronized cameras with SAM2 subject
+            masks propagated per camera for subject isolation. Output is a .ply
+            sequence viewable in SuperSplat or PostShot for client and on-set review,
+            and compressed for compositing delivery in Nuke or Flame. The full
+            pipeline is scripted end-to-end in Python, phase-gated and built to run
+            unattended.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key Challenge</div>
+        <p class="callout-text">
+          Per-frame splatfacto produces no temporal consistency between frames,
+          as each splat is an independent solve. The transition to SpacetimeGaussians trains
+          all frames simultaneously in a unified 4D representation, which is the correct
+          tool for dynamic volumetric sequences in VFX production.
+        </p>
+      </div>
+
+      <div class="stats-strip reveal">
+        <div class="stat-item">
+          <span class="stat-num">90</span>
+          <span class="stat-label">Synchronized Cameras</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">1</span>
+          <span class="stat-label">Master Registration - All Frames</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">Full</span>
+          <span class="stat-label">Source Resolution Training</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">E2E</span>
+          <span class="stat-label">Python Automation</span>
+        </div>
+      </div>
+
+      <div class="reveal" style="margin-top:2.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; border-top:1px solid var(--border); padding-top:2rem;">
+        <div>
+          <div class="section-label">// Role</div>
+          <p class="body-para">Pipeline R&amp;D Lead: capture system design, camera registration, training pipeline, Python automation, and delivery.</p>
+        </div>
+        <div>
+          <div class="section-label">// Context</div>
+          <p class="body-para">Internal R&amp;D at Industrial Pixel 3D Studios, Vancouver. Built for production VFX and virtual production deliverables.</p>
+        </div>
+      </div>
+
+      <div class="software-row reveal">
+        <span class="software-label">Pipeline</span>
+        <span class="tag gold">LichtFeld Studio</span>
+        <span class="tag gold">RealityCapture</span>
+        <span class="tag gold">COLMAP</span>
+        <span class="tag">Python</span>
+        <span class="tag">FFmpeg</span>
+        <span class="tag">SAM2</span>
+        <span class="tag">WSL2 / Ubuntu</span>
+        <span class="tag">CUDA 12.8</span>
+        <span class="tag">SuperSplat</span>
+        <span class="tag">Nuke</span>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule reveal"><span>Pipeline Diagram</span></div></div>
+
+  <!-- PIPELINE DIAGRAM -->
+  <section id="pipeline-diagram">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="section-label">// Architecture</div>
+        <h2>Pipeline Overview</h2>
+      </div>
+      <div class="diagram-frame reveal">
+        <img src="../assets/svg/4dgs_pipeline_diagram.svg" alt="4D Gaussian Splat Pipeline Diagram" />
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule reveal"><span>Render</span></div></div>
+
+  <!-- VIDEO EMBED -->
+  <section id="project-video">
+    <div class="wrap">
+      <div class="video-header reveal">
+        <div class="section-label">// Output</div>
+        <h2>4DGS Render</h2>
+      </div>
+      <div class="video-frame reveal">
+        <iframe
+          src="https://player.vimeo.com/video/1197054606?h=db55ba158e&badge=0&autopause=0"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT NAV -->
+  <section id="project-nav">
+    <div class="wrap">
+      <div class="project-nav-inner reveal">
+        <a href="planetary-approach.html" class="project-nav-link">
+          <span class="nav-dir">← Previous</span>
+          <span class="nav-title">Planetary Approach</span>
+        </a>
+        <a href="1899.html" class="project-nav-link right">
+          <span class="nav-dir">Next Project →</span>
+          <span class="nav-title">1899</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-name">Tyler Lopez</div>
+    <div class="footer-note">Vancouver, BC &nbsp;·&nbsp; Technical Cinematics &amp; VFX &nbsp;·&nbsp; 2026</div>
+  </footer>
+
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          let delay = 0;
+          siblings.forEach((sib, idx) => { if (sib === entry.target) delay = idx * 80; });
+          setTimeout(() => entry.target.classList.add('visible'), delay);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
