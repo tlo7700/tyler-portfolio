@@ -126,7 +126,10 @@
 
     /* ── HERO ── */
     #hero {
-      min-height: 100vh;
+      /* Height tracks the natural 16:9 width — no crop ever needed */
+      height: 56.25vw;
+      min-height: 480px;
+      max-height: 90vh;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -137,16 +140,11 @@
 
     .hero-reel {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: auto;
-      height: 72vh;
+      inset: 0;
       z-index: 0;
-      transition: height 1.8s ease;
     }
 
-    /* Vimeo full-bleed background */
+    /* Iframe fills the reel exactly — same aspect ratio, zero crop */
     .reel-embed {
       position: absolute;
       inset: 0;
@@ -154,38 +152,12 @@
     }
     .reel-embed iframe {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      /* cover viewport regardless of aspect ratio */
-      width: 100vw;
-      height: 56.25vw;   /* 16:9 */
-      min-height: 100vh;
-      min-width: 177.78vh; /* 16:9 */
-      transform: translate(-50%, -50%);
+      inset: 0;
+      width: 100%;
+      height: 100%;
       border: none;
       opacity: 0.55;
       transition: opacity 1.8s ease;
-    }
-
-    /* Immersive mode — text fades, video goes full brightness */
-    .hero-content {
-      transition: opacity 1.8s ease;
-    }
-    .hero-reel::after {
-      transition: opacity 1.8s ease;
-    }
-    #hero.hero--immersive .hero-reel {
-      height: 100vh;
-    }
-    #hero.hero--immersive .hero-content {
-      opacity: 0;
-      pointer-events: none;
-    }
-    #hero.hero--immersive .hero-reel::after {
-      opacity: 0;
-    }
-    #hero.hero--immersive .reel-embed iframe {
-      opacity: 1;
     }
 
     /* Dark vignette over reel */
@@ -197,12 +169,64 @@
         linear-gradient(to top, var(--bg) 0%, transparent 30%),
         linear-gradient(to right, rgba(12,11,9,0.6) 0%, transparent 50%),
         radial-gradient(ellipse at center, transparent 30%, rgba(12,11,9,0.5) 100%);
+      transition: opacity 1.8s ease;
     }
 
     .hero-content {
       position: relative;
       z-index: 1;
       padding: 0 clamp(1.25rem, 5vw, 4rem);
+      transition: opacity 1.8s ease;
+    }
+
+    /* Immersive mode — text fades, video goes full brightness */
+    #hero.hero--immersive .hero-content {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #hero.hero--immersive .hero-reel::after {
+      opacity: 0;
+    }
+    #hero.hero--immersive .reel-embed iframe {
+      opacity: 1;
+    }
+
+    /* Mobile immersive — letterbox: reel floats fixed, centered in viewport */
+    @media (max-width: 600px) {
+      .hero-reel {
+        transition: opacity 1.8s ease;
+      }
+      #hero.hero--immersive .hero-reel {
+        position: fixed;
+        top: 50%;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        width: 100vw;
+        height: 56.25vw;
+        transform: translateY(-50%);
+        z-index: 50;
+      }
+      #hero.hero--immersive .reel-embed iframe {
+        width: 100%;
+        height: 100%;
+        transform: none;
+        top: 0;
+        left: 0;
+      }
+      /* Full-screen dim layer behind the centered reel */
+      .mobile-immersive-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.88);
+        z-index: 49;
+        opacity: 0;
+        transition: opacity 1.8s ease;
+        pointer-events: none;
+      }
+      .mobile-immersive-overlay.visible {
+        opacity: 1;
+      }
     }
 
     .hero-eyebrow {
@@ -379,6 +403,25 @@
       padding: 1.1rem 0;
       border-bottom: 1px solid var(--border);
       transition: background 0.2s;
+    }
+    @media (max-width: 600px) {
+      .onset-row {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 0.3rem 1rem;
+        padding: 0.9rem 0;
+      }
+      .onset-title {
+        grid-column: 1 / -1;
+        font-size: 1rem;
+      }
+      .onset-type {
+        grid-column: 1;
+        white-space: normal;
+      }
+      .onset-role {
+        grid-column: 2;
+      }
     }
     .onset-row:first-child { border-top: 1px solid var(--border); }
     .onset-title {
@@ -878,10 +921,8 @@
         </div>
         <div>
           <p class="about-body">
-            3 years leading 3D scanning and photogrammetry pipelines across
-            20+ feature film and episodic productions at Industrial Pixel 3D Studios,
-            Vancouver. I operate multi-camera synchronized rigs, FARO LiDAR systems,
-            and HDRI capture workflows on set.<br><br>
+            I operate multi-camera synchronized rigs, FARO LiDAR systems,
+            and HDRI capture workflows on set at Industrial Pixel 3D Studios, Vancouver.<br><br>
             I also build the pipeline tools: Python automation, Google Apps Script,
             and Raspberry Pi hardware integration that keep scan teams moving fast
             in high-pressure production environments.<br><br>
@@ -1480,12 +1521,23 @@
       const hero = document.getElementById('hero');
       let idleTimer = null;
 
+      // Overlay for mobile letterbox dim
+      const overlay = document.createElement('div');
+      overlay.className = 'mobile-immersive-overlay';
+      document.body.appendChild(overlay);
+
+      function isMobile() {
+        return window.innerWidth <= 600;
+      }
+
       function enterImmersive() {
         hero.classList.add('hero--immersive');
+        if (isMobile()) overlay.classList.add('visible');
       }
 
       function exitImmersive() {
         hero.classList.remove('hero--immersive');
+        overlay.classList.remove('visible');
       }
 
       function resetTimer() {
@@ -1494,13 +1546,13 @@
         idleTimer = setTimeout(enterImmersive, 5000);
       }
 
-      // Start the 20s countdown immediately
+      // Start countdown immediately
       idleTimer = setTimeout(enterImmersive, 5000);
 
       // Scroll brings text back and restarts the clock
       window.addEventListener('scroll', resetTimer, { passive: true });
 
-      // Mouse / touch activity also resets (so active users never trigger it)
+      // Mouse / touch activity also resets
       ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(function (evt) {
         window.addEventListener(evt, resetTimer, { passive: true });
       });
