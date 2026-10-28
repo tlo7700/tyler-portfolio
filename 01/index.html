@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Tyler Lopez — Cinematic Artist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── ROOT VARIABLES ── */
+    :root {
+      --bg:         #0c0b09;
+      --bg2:        #131210;
+      --bg3:        #1a1916;
+      --border:     rgba(200,169,110,0.18);
+      --gold:       #c8a96e;
+      --gold-dim:   rgba(200,169,110,0.45);
+      --gold-glow:  rgba(200,169,110,0.08);
+      --text:       #e8e2d9;
+      --text-dim:   #8a847a;
+      --text-faint: #4a4640;
+      --mono:       'DM Mono', monospace;
+      --serif:      'Cormorant Garamond', serif;
+      --display:    'Bebas Neue', sans-serif;
+      --gap:        clamp(1.5rem, 4vw, 3rem);
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-weight: 300;
+      font-size: clamp(13px, 1.4vw, 15px);
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    a { color: var(--gold); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.7; }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.028;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+
+    /* ── LAYOUT WRAPPER ── */
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+    }
+
+    /* ── RULE ELEMENTS ── */
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-block: var(--gap);
+    }
+    .rule::before, .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .rule span {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      white-space: nowrap;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.4rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(12,11,9,0.95) 0%, transparent 100%);
+      backdrop-filter: blur(0px);
+    }
+
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--gold); }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2.5rem;
+    }
+    nav ul li a {
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      transition: color 0.2s;
+    }
+    nav ul li a:hover { color: var(--gold); opacity: 1; }
+
+    /* ── HERO ── */
+    #hero {
+      /* Height tracks the natural 16:9 width — no crop ever needed */
+      height: 56.25vw;
+      min-height: 480px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: clamp(3rem, 6vw, 5rem);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-reel {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* Iframe fills the reel exactly — same aspect ratio, zero crop */
+    .reel-embed {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .reel-embed iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      opacity: 0.55;
+      transition: opacity 1.8s ease;
+    }
+
+    /* Dark vignette over reel */
+    .hero-reel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, var(--bg) 0%, transparent 30%),
+        linear-gradient(to right, rgba(12,11,9,0.6) 0%, transparent 50%),
+        radial-gradient(ellipse at center, transparent 30%, rgba(12,11,9,0.5) 100%);
+      transition: opacity 1.8s ease;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      padding: 0 clamp(1.25rem, 5vw, 4rem);
+      transition: opacity 1.8s ease;
+    }
+
+    /* Immersive mode — text fades, video goes full brightness */
+    #hero.hero--immersive .hero-content {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #hero.hero--immersive .hero-reel::after {
+      opacity: 0;
+    }
+    #hero.hero--immersive .reel-embed iframe {
+      opacity: 1;
+    }
+
+    /* Mobile immersive — letterbox: reel floats fixed, centered in viewport */
+    @media (max-width: 600px) {
+      .hero-reel {
+        transition: opacity 1.8s ease;
+      }
+      #hero.hero--immersive .hero-reel {
+        position: fixed;
+        top: 50%;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        width: 100vw;
+        height: 56.25vw;
+        transform: translateY(-50%);
+        z-index: 50;
+      }
+      #hero.hero--immersive .reel-embed iframe {
+        width: 100%;
+        height: 100%;
+        transform: none;
+        top: 0;
+        left: 0;
+      }
+      /* Full-screen dim layer behind the centered reel */
+      .mobile-immersive-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.88);
+        z-index: 49;
+        opacity: 0;
+        transition: opacity 1.8s ease;
+        pointer-events: none;
+      }
+      .mobile-immersive-overlay.visible {
+        opacity: 1;
+      }
+    }
+
+    .hero-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 2rem;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      line-height: 0.92;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    h1 em {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--gold);
+      font-size: 0.75em;
+      display: block;
+    }
+
+    .hero-sub {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      max-width: 500px;
+      line-height: 1.9;
+      text-transform: uppercase;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      padding: 0.7rem 1.5rem;
+      border: 1px solid var(--border);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .hero-cta:hover {
+      background: var(--gold-glow);
+      border-color: var(--gold-dim);
+      opacity: 1;
+    }
+    .hero-cta::after {
+      content: '↓';
+      font-size: 0.9rem;
+    }
+
+    /* ── SECTION BASE ── */
+    section { padding-block: clamp(4rem, 8vw, 7rem); }
+
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-family: var(--display);
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    h3 {
+      font-family: var(--display);
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+
+    /* ── ABOUT ── */
+    #about .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      align-items: start;
+      margin-top: 3rem;
+    }
+
+    .splat-container {
+      margin-top: 2.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      overflow: hidden;
+    }
+    .splat-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      padding: 0.55rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .splat-container iframe {
+      display: block;
+      width: 100%;
+      height: 420px;
+      border: none;
+    }
+    @media (max-width: 600px) {
+      .splat-container iframe { height: 280px; }
+    }
+
+    .about-lead {
+      font-family: var(--serif);
+      font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+      line-height: 1.6;
+      font-weight: 300;
+      color: var(--text);
+    }
+    .about-lead em { color: var(--gold); font-style: italic; }
+
+    .about-body {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      line-height: 1.9;
+      padding-top: 0.25rem;
+    }
+
+    .credit-list {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .credit {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.55rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .credit:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+    /* ── ON-SET WORK (compressed) ── */
+    #onset-work { padding-block: clamp(3rem, 6vw, 5rem); }
+
+    .credits-compact {
+      margin-top: 2rem;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      line-height: 1.9;
+    }
+    .credits-compact-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+    .credits-compact p {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .credits-compact strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* ── PROJECTS ── */
+    #projects .projects-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.5rem;
+    }
+
+    /* Featured project — full width */
+    .project-card {
+      position: relative;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    .project-card:hover { border-color: var(--gold-dim); }
+    .project-card:hover .card-overlay { opacity: 1; }
+    .project-card:hover .card-img { transform: scale(1.03); }
+
+    .project-card.featured { grid-column: span 7; }
+    .project-card.tall      { grid-column: span 5; grid-row: span 2; display: flex; flex-direction: column; }
+    .project-card.third     { grid-column: span 4; }
+    .project-card.half      { grid-column: span 6; }
+
+    .card-media {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+    }
+    .project-card.tall .card-media { flex: 1; aspect-ratio: unset; min-height: 0; }
+
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s ease;
+      background: var(--bg3);
+    }
+
+    /* Placeholder when no image yet */
+    .card-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg3);
+      color: var(--text-faint);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      aspect-ratio: 16/9;
+    }
+    .project-card.tall .card-placeholder { aspect-ratio: 3/4; }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(200,169,110,0.06);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    /* Vimeo embed in card (hidden until click) */
+    .card-embed {
+      display: none;
+      position: absolute;
+      inset: 0;
+    }
+    .card-embed iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .card-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+    }
+
+    .card-number {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      color: var(--gold-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-body h3 {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      margin-bottom: 0.4rem;
+    }
+
+    .card-desc {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .tag {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      border: 1px solid var(--text-faint);
+      padding: 0.15rem 0.45rem;
+    }
+    .tag.gold { color: var(--gold-dim); border-color: var(--border); }
+
+    /* ── SKILLS ── */
+    #skills {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0;
+      margin-top: 3rem;
+    }
+
+    .skill-col {
+      padding: 2rem;
+      border-right: 1px solid var(--border);
+    }
+    .skill-col:last-child { border-right: none; }
+
+    .skill-col-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+    }
+
+    .skill-col ul {
+      list-style: none;
+    }
+    .skill-col ul li {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      padding: 0.3rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .skill-col ul li::before {
+      content: '';
+      width: 3px;
+      height: 3px;
+      background: var(--gold-dim);
+      flex-shrink: 0;
+    }
+
+    /* ── CONTACT ── */
+    #contact {
+      text-align: center;
+    }
+
+    .contact-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .contact-inner h2 {
+      margin-bottom: 1rem;
+    }
+
+    .contact-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      line-height: 1.9;
+      margin-bottom: 2.5rem;
+    }
+
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .contact-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .contact-link .link-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .contact-link .link-val {
+      font-size: 0.75rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 2rem clamp(1.25rem, 5vw, 4rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+
+    footer .footer-name {
+      font-family: var(--display);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+    }
+
+    footer .footer-note {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-eyebrow { animation: fadeUp 0.8s ease both; animation-delay: 0.2s; }
+    h1            { animation: fadeUp 0.8s ease both; animation-delay: 0.35s; }
+    .hero-sub     { animation: fadeUp 0.8s ease both; animation-delay: 0.5s; }
+    .hero-cta     { animation: fadeUp 0.8s ease both; animation-delay: 0.65s; }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      #about .about-grid {
+        grid-template-columns: 1fr;
+      }
+      .project-card.featured,
+      .project-card.tall,
+      .project-card.third,
+      .project-card.half {
+        grid-column: span 12;
+      }
+      .skill-col {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      nav ul { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+
+    /* ── PHOTOGRAPHY ── */
+    #photography {
+      padding-block: clamp(4rem, 8vw, 7rem);
+    }
+
+    .photo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Grid layout — flows left to right, top to bottom */
+    .masonry {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 1px;
+      column-gap: 0.75rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .masonry { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .masonry { grid-template-columns: 1fr; } }
+
+    .photo-item { margin-bottom: 0.75rem; }
+
+    .photo-item {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--bg3);
+    }
+
+    .photo-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: transform 0.55s ease, filter 0.4s ease;
+      filter: saturate(1) brightness(1);
+    }
+    .photo-item:hover img {
+      transform: scale(1.04);
+      filter: saturate(0.75) brightness(0.9);
+    }
+
+    /* Overlay with caption on hover */
+    .photo-caption {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(12,11,9,0.82) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.35s;
+      display: flex;
+      align-items: flex-end;
+      padding: 1rem;
+    }
+    .photo-item:hover .photo-caption { opacity: 1; }
+
+    .photo-caption span {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* Size variants for masonry items */
+    .photo-item.size-l img,
+    .photo-item.size-m img,
+    .photo-item.size-s img {
+      width: 100%;
+      height: auto;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(12,11,9,0.96);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .lightbox.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .lightbox img {
+      max-width: 88vw;
+      max-height: 88vh;
+      object-fit: contain;
+      border: 1px solid var(--border);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 2rem;
+      right: 2.5rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .lightbox-close:hover { color: var(--gold); }
+    .lightbox-caption {
+      position: absolute;
+      bottom: 2.5rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.4rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 1rem;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    .lightbox-nav:hover { color: var(--gold); }
+    .lightbox-prev { left: 1.5rem; }
+    .lightbox-next { right: 1.5rem; }
+
+    /* ── SHOW MORE BUTTON ── */
+    .photo-item--hidden { display: none; }
+
+    .show-more-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 2.5rem;
+    }
+
+    .show-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 2.2rem;
+      background: rgba(200,169,110,0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(200,169,110,0.22);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s, color 0.2s;
+    }
+    .show-more-btn:hover {
+      background: rgba(200,169,110,0.12);
+      border-color: var(--gold-dim);
+    }
+    .show-more-btn .btn-arrow {
+      font-size: 0.85rem;
+      display: inline-block;
+      transition: transform 0.35s ease;
+    }
+    .show-more-btn.expanded .btn-arrow {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Tyler <span>Lopez</span></div>
+    <ul>
+      <li><a href="#photography">Photography</a></li>
+      <li><a href="#projects">Work</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-reel">
+      <div class="reel-embed">
+        <iframe src="https://player.vimeo.com/video/1197185132?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;background=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Reel"></iframe>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">Technical Cinematics &amp; VFX</div>
+      <h1>
+        Tyler Lopez
+        <em>Real-Time Cinematics · Photography · Feature Film</em>
+      </h1>
+      <p class="hero-sub">
+        Vancouver, BC &nbsp;·&nbsp; LiDAR · Photogrammetry · Unreal Engine 5<br>
+        20+ feature film &amp; episodic productions
+      </p>
+      <a href="#photography" class="hero-cta">View Work</a>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>Through the Lens</span></div></div>
+
+  <!-- PHOTOGRAPHY -->
+  <section id="photography">
+    <div class="wrap">
+      <div class="photo-header reveal">
+        <div>
+          <div class="section-label">// 01 — Photography</div>
+          <h2>Through the Lens</h2>
+        </div>
+        <p style="font-size:0.68rem;color:var(--text-dim);max-width:300px;text-align:right;line-height:1.8;">
+          Personal photography. Every frame captioned with lens and exposure, the same decisions I make with a virtual camera in Unreal.
+        </p>
+      </div>
+
+      <div class="masonry reveal" id="masonryGrid">
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/01-L.jpg" data-caption="27mm · f/2.8 · 1/250s · ISO 500">
+          <img src="../assets/images/photography/01-L.jpg" alt="Morning light" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/250s · ISO 500</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Morning light</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/02-M.jpg" data-caption="200mm · f/7.1 · 1/160s · ISO 200">
+          <img src="../assets/images/photography/02-M.jpg" alt="Pacific Northwest" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>200mm · f/7.1 · 1/160s · ISO 200</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Pacific Northwest</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/03-L.jpg" data-caption="55mm · f/5.6 · 1/400s · ISO 100">
+          <img src="../assets/images/photography/03-L.jpg" alt="Coastal fog" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>55mm · f/5.6 · 1/400s · ISO 100</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Coastal fog</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/04-M.jpg" data-caption="27mm · f/4 · 1/1600s · ISO 250">
+          <img src="../assets/images/photography/04-M.jpg" alt="Golden hour" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/4 · 1/1600s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Golden hour</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/05-L.jpg" data-caption="27mm · f/2.8 · 1/3200s · ISO 250">
+          <img src="../assets/images/photography/05-L.jpg" alt="Still" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/3200s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Still</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/06-M.jpg" data-caption="27mm · f/2.8 · 1/200s · ISO 250">
+          <img src="../assets/images/photography/06-M.jpg" alt="Treeline" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/200s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Treeline</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/07-L.jpg" data-caption="18mm · f/4 · 1/2000s · ISO 100">
+          <img src="../assets/images/photography/07-L.jpg" alt="Last light" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>18mm · f/4 · 1/2000s · ISO 100</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Last light</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/08-M.jpg" data-caption="27mm · f/4 · 1/500s · ISO 160">
+          <img src="../assets/images/photography/08-M.jpg" alt="Overcast" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/4 · 1/500s · ISO 160</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Overcast</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/09-M.jpg" data-caption="27mm · f/5 · 1/100s · ISO 1000">
+          <img src="../assets/images/photography/09-M.jpg" alt="Open road" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/5 · 1/100s · ISO 1000</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Open road</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/10-L.jpg" data-caption="27mm · f/2.8 · 1/250s · ISO 500">
+          <img src="../assets/images/photography/10-L.jpg" alt="Dusk" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/250s · ISO 500</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Dusk</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/11-L.jpg" data-caption="27mm · f/4 · 1/1000s · ISO 250">
+          <img src="../assets/images/photography/11-L.jpg" alt="Horizon" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/4 · 1/1000s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Horizon</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/12-M.jpg" data-caption="27mm · f/2.8 · 1/60s · ISO 320">
+          <img src="../assets/images/photography/12-M.jpg" alt="Solitude" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/60s · ISO 320</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Solitude</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/13-L.jpg" data-caption="27mm · f/8 · 1/125s · ISO 640">
+          <img src="../assets/images/photography/13-L.jpg" alt="Texture" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/8 · 1/125s · ISO 640</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Texture</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/14-M.jpg" data-caption="27mm · f/5.6 · 1/1600s · ISO 400">
+          <img src="../assets/images/photography/14-M.jpg" alt="Depth" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/5.6 · 1/1600s · ISO 400</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Depth</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/15-M.jpg" data-caption="27mm · f/2.8 · 1/500s · ISO 250">
+          <img src="../assets/images/photography/15-M.jpg" alt="Quiet" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/500s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Quiet</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/16-L.jpg" data-caption="27mm · f/10 · 1/100s · ISO 160">
+          <img src="../assets/images/photography/16-L.jpg" alt="Contrast" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/10 · 1/100s · ISO 160</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Contrast</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/17-M.jpg" data-caption="27mm · f/8 · 1/1000s · ISO 400">
+          <img src="../assets/images/photography/17-M.jpg" alt="Passage" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/8 · 1/1000s · ISO 400</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Passage</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/18-L.jpg" data-caption="27mm · f/5 · 1/320s · ISO 160">
+          <img src="../assets/images/photography/18-L.jpg" alt="Wandering" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/5 · 1/320s · ISO 160</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Wandering</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/19-M.jpg" data-caption="27mm · f/2.8 · 1/1000s · ISO 160">
+          <img src="../assets/images/photography/19-M.jpg" alt="Stillness" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/1000s · ISO 160</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Stillness</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-l" data-src="../assets/images/photography/BW-01-L.jpg" data-caption="27mm · f/4 · 1/1000s · ISO 250">
+          <img src="../assets/images/photography/BW-01-L.jpg" alt="Monochrome" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/4 · 1/1000s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Monochrome</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/BW-02-M.jpg" data-caption="27mm · f/2.8 · 1/640s · ISO 250">
+          <img src="../assets/images/photography/BW-02-M.jpg" alt="Shadow" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/2.8 · 1/640s · ISO 250</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Shadow</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/BW-03-M.jpg" data-caption="40mm · f/5 · 1/100s · ISO 1600">
+          <img src="../assets/images/photography/BW-03-M.jpg" alt="Form" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>40mm · f/5 · 1/100s · ISO 1600</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Form</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="photo-item size-m" data-src="../assets/images/photography/BW-04-M.jpg" data-caption="27mm · f/10 · 1/160s · ISO 160">
+          <img src="../assets/images/photography/BW-04-M.jpg" alt="Atmosphere" loading="lazy" />
+          <div class="photo-caption">
+            <div style="display:flex;flex-direction:column;gap:0.2rem;">
+              <span>27mm · f/10 · 1/160s · ISO 160</span>
+              <span style="font-size:0.52rem;letter-spacing:0.15em;color:var(--text-faint);">Atmosphere</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="show-more-wrap">
+        <button class="show-more-btn" id="showMoreBtn" aria-expanded="false">
+          <span id="showMoreLabel">Show More</span>
+          <span class="btn-arrow">↓</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>Selected Work</span></div></div>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="wrap">
+      <div class="projects-header reveal">
+        <div>
+          <div class="section-label">// 02 — Projects</div>
+          <h2>Selected Work</h2>
+        </div>
+      </div>
+
+      <div class="project-grid">
+
+        <!-- PROJECT 001: Planetary Approach — FEATURED -->
+        <div class="project-card featured reveal" onclick="location.href='../projects/planetary-approach.html?ref=ea'" style="cursor:pointer;">
+          <div class="card-media">
+            <img class="card-img" src="../assets/images/thumbnails/planetary-approach.png" alt="Planetary Approach" />
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-number">001</div>
+            <h3>Planetary Approach</h3>
+            <p class="card-desc">
+              Real-time planetary cinematic built in Unreal Engine 5. Atmospheric
+              volumetrics and large-scale environment composition for immersive environment-driven storytelling.
+            </p>
+            <div class="card-tags">
+              <span class="tag gold">Unreal Engine 5</span>
+              <span class="tag">Atmospherics</span>
+              <span class="tag">Environment Art</span>
+              <span class="tag">Cinematics</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 002: Unreal Galaxy — TALL -->
+        <div class="project-card tall reveal" onclick="location.href='../projects/unreal-galaxy.html?ref=ea'" style="cursor:pointer;">
+          <div class="card-media">
+            <img class="card-img" src="../assets/images/thumbnails/Unreal.png" alt="Unreal Galaxy" />
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-number">002</div>
+            <h3>Unreal Galaxy</h3>
+            <p class="card-desc">
+              Real-time cinematic environment built in Unreal Engine 5.
+              Lumen global illumination, Nanite geometry, and cinematic camera
+              sequencer work demonstrating game-ready environment art and
+              technical lighting workflows.
+            </p>
+            <div class="card-tags">
+              <span class="tag gold">Unreal Engine 5</span>
+              <span class="tag">Lumen</span>
+              <span class="tag">Nanite</span>
+              <span class="tag">Cinematic Lighting</span>
+              <span class="tag">Environment Art</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 003: 1899 — HALF -->
+        <div class="project-card half reveal" onclick="location.href='../projects/1899.html?ref=ea'" style="cursor:pointer;">
+          <div class="card-media">
+            <img class="card-img" src="../assets/images/thumbnails/1899_Final.jpg" alt="1899" />
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-number">003</div>
+            <h3>1899</h3>
+            <p class="card-desc">Personal Blender project exploring mood and atmosphere through procedural wave geometry, minimal lighting, and slow cinematic camera animation.</p>
+            <div class="card-tags">
+              <span class="tag gold">Blender</span>
+              <span class="tag">Procedural</span>
+              <span class="tag">Displacement</span>
+              <span class="tag">Atmospheric</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 004: Flood Falls — HALF -->
+        <div class="project-card half reveal" onclick="location.href='../projects/flood-falls.html?ref=ea'" style="cursor:pointer;">
+          <div class="card-media">
+            <img class="card-img" src="../assets/images/thumbnails/FloodFalls.png" alt="Flood Falls" />
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-number">004</div>
+            <h3>Flood Falls</h3>
+            <p class="card-desc">
+              Full location scan pipeline: drone/UAV aerial capture, LiDAR point cloud,
+              and photogrammetry mesh reconstruction delivered to VFX production.
+            </p>
+            <div class="card-tags">
+              <span class="tag gold">LiDAR / FARO</span>
+              <span class="tag">RealityCapture</span>
+              <span class="tag">Photogrammetry</span>
+              <span class="tag">Production Pipeline</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 005: 4D Splat Pipeline — FEATURED -->
+        <div class="project-card featured reveal" onclick="location.href='../projects/4d-splat-pipeline.html?ref=ea'" style="cursor:pointer;">
+          <div class="card-media">
+            <img class="card-img" src="../assets/images/thumbnails/Lichtfeld_4D_Render0126.png" alt="4D Splat Pipeline" />
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-number">005</div>
+            <h3>4D Splat Pipeline</h3>
+            <p class="card-desc">
+              End-to-end volumetric capture pipeline using a TODO: confirm rig size synchronized rig,
+              COLMAP registration, and Nerfstudio splatfacto training producing
+              real-time 4D Gaussian splat outputs for VFX and virtual production.
+            </p>
+            <div class="card-tags">
+              <span class="tag gold">Nerfstudio</span>
+              <span class="tag">Gaussian Splats</span>
+              <span class="tag">COLMAP</span>
+              <span class="tag">Python</span>
+              <span class="tag">Multi-Cam Sync</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>About</span></div></div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="wrap">
+      <div class="section-label">// 03 — About</div>
+      <h2>On-Set to In-Engine</h2>
+      <div class="about-grid reveal">
+        <div>
+          <p class="about-lead">
+            I'm a cinematics and photography-focused artist with 3+ years across 20+ feature film and
+            episodic VFX productions. I shoot on a Fujifilm X-T4 and apply the same decisions,
+            focal length, aperture, timing, to virtual cameras in Unreal Engine 5.
+          </p>
+        </div>
+        <div>
+          <p class="about-body">
+            My background is 3D scanning: I built and ran capture pipelines on set at Industrial Pixel 3D Studios.
+            That on-set experience is what informs how I light, frame, and compose in-engine.
+            Scanning is the foundation; cinematics is where I'm going.
+          </p>
+        </div>
+      </div>
+      <div class="splat-container reveal">
+        <div class="splat-label">// Gaussian Splat — 3D Scan Sample</div>
+        <iframe src="https://superspl.at/s?id=e0465951" allow="fullscreen; xr-spatial-tracking"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>Productions</span></div></div>
+
+  <!-- PRODUCTIONS (compressed) -->
+  <section id="onset-work">
+    <div class="wrap">
+      <div class="projects-header reveal">
+        <div>
+          <div class="section-label">// 04 — On-Set</div>
+          <h2>Productions</h2>
+        </div>
+      </div>
+
+      <div class="credits-compact reveal">
+        <div class="credits-compact-label">Selected Credits</div>
+        <p>
+          <strong>Sinners</strong> · <strong>Welcome to Derry</strong> · <strong>Final Destination: Bloodlines</strong> · <strong>Star Trek: Discovery</strong> · <strong>Now You See Me: Now You Don't</strong> · <strong>Superman &amp; Lois</strong> · and 9 more
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>Technical Skills</span></div></div>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="wrap">
+      <div class="section-label">// 05 — Skills</div>
+      <h2>Technical Stack</h2>
+      <div class="skills-grid reveal">
+
+        <div class="skill-col">
+          <div class="skill-col-label">Cinematics &amp; Look</div>
+          <ul>
+            <li>Unreal Engine 5 Sequencer</li>
+            <li>Path Tracer</li>
+            <li>Lumen</li>
+            <li>Cinematic Camera / Lensing</li>
+            <li>In-Engine Lighting</li>
+          </ul>
+        </div>
+
+        <div class="skill-col">
+          <div class="skill-col-label">Finishing</div>
+          <ul>
+            <li>Adobe Lightroom</li>
+            <li>Adobe Photoshop</li>
+            <li>Adobe Premiere Pro</li>
+          </ul>
+        </div>
+
+        <div class="skill-col">
+          <div class="skill-col-label">Capture &amp; Scanning</div>
+          <ul>
+            <li>DSLR Photography (Fujifilm X-T4)</li>
+            <li>LiDAR — FARO Focus</li>
+            <li>Photogrammetry</li>
+            <li>Gaussian Splat &amp; NeRF Reconstruction</li>
+            <li>Drone / Aerial Capture</li>
+            <li>Multi-Camera Capture Systems &amp; Networking</li>
+            <li>HDRI Creation</li>
+            <li>On-Set Data Acquisition &amp; QC</li>
+          </ul>
+        </div>
+
+        <div class="skill-col">
+          <div class="skill-col-label">Software</div>
+          <ul>
+            <li>RealityCapture</li>
+            <li>Nerfstudio / Lichtfeld</li>
+            <li>Unreal Engine 5</li>
+            <li>Blender</li>
+            <li>ZBrush</li>
+            <li>Python</li>
+          </ul>
+        </div>
+
+        <div class="skill-col">
+          <div class="skill-col-label">Pipeline &amp; Production</div>
+          <ul>
+            <li>Capture Rig Assembly &amp; Calibration</li>
+            <li>Field Team Direction</li>
+            <li>Hardware Troubleshooting</li>
+            <li>Cross-Department Production Workflows</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="reveal" style="margin-top:2.5rem; padding:1rem 1.5rem; border:1px solid var(--gold-dim); border-left:3px solid var(--gold); background:var(--gold-glow); display:flex; align-items:center; justify-content:space-between; gap:2rem; flex-wrap:wrap;">
+        <span style="font-size:0.58rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); white-space:nowrap;">Certification</span>
+        <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--text);">Transport Canada Small RPAS VLOS</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="rule"><span>Get in Touch</span></div></div>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="contact-inner reveal">
+        <div class="section-label">// 06 — Contact</div>
+        <h2>Let's Work Together</h2>
+        <p class="contact-sub">
+          Based in Vancouver. 3 years on feature and episodic productions,
+          currently targeting technical cinematics and real-time pipeline roles.
+          Open to contract and full-time.
+        </p>
+        <div class="contact-links">
+          <div class="contact-link">
+            <span class="link-label">Email</span>
+            <a href="mailto:tlo7700@gmail.com" class="link-val">tlo7700@gmail.com</a>
+          </div>
+          <div class="contact-link">
+            <span class="link-label">Phone</span>
+            <a href="tel:+15053778805" class="link-val">(505) 377-8805</a>
+          </div>
+          <div class="contact-link">
+            <span class="link-label">LinkedIn</span>
+            <a href="https://www.linkedin.com/in/tylerlopez--" class="link-val" target="_blank">linkedin.com/in/tylerlopez--</a>
+          </div>
+          <div class="contact-link">
+            <span class="link-label">Location</span>
+            <span class="link-val" style="color:var(--text-dim)">Vancouver, BC</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <div class="lightbox-close" id="lbClose">[ Close ]</div>
+    <div class="lightbox-nav lightbox-prev" id="lbPrev">&#8592;</div>
+    <img src="" alt="" id="lbImg" />
+    <div class="lightbox-nav lightbox-next" id="lbNext">&#8594;</div>
+    <div class="lightbox-caption" id="lbCaption"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-name">Tyler Lopez</div>
+    <div class="footer-note">Vancouver, BC &nbsp;·&nbsp; Technical Cinematics &amp; VFX &nbsp;·&nbsp; 2026</div>
+  </footer>
+
+  <!-- MASONRY LAYOUT SCRIPT -->
+  <script>
+    function layoutMasonry() {
+      const grid = document.getElementById('masonryGrid');
+      if (!grid) return;
+      grid.querySelectorAll('.photo-item:not(.photo-item--hidden)').forEach(item => {
+        item.style.gridRowEnd = '';
+        const h = item.offsetHeight + 12; // 12px = 0.75rem gap
+        item.style.gridRowEnd = 'span ' + Math.ceil(h);
+      });
+    }
+    window.addEventListener('load', layoutMasonry);
+    window.addEventListener('resize', layoutMasonry);
+    document.querySelectorAll('.photo-item img').forEach(img => {
+      img.addEventListener('load', layoutMasonry);
+    });
+
+    // Show more / show less
+    (function () {
+      const VISIBLE_COUNT = 9;
+      const items = Array.from(document.querySelectorAll('.photo-item'));
+      const btn   = document.getElementById('showMoreBtn');
+      const label = document.getElementById('showMoreLabel');
+
+      // Hide items beyond the initial count
+      items.forEach((item, i) => {
+        if (i >= VISIBLE_COUNT) item.classList.add('photo-item--hidden');
+      });
+
+      btn.addEventListener('click', function () {
+        const expanded = btn.classList.toggle('expanded');
+        btn.setAttribute('aria-expanded', expanded);
+        label.textContent = expanded ? 'Show Less' : 'Show More';
+
+        items.forEach((item, i) => {
+          if (i >= VISIBLE_COUNT) {
+            if (expanded) {
+              item.classList.remove('photo-item--hidden');
+            } else {
+              item.classList.add('photo-item--hidden');
+              item.style.gridRowEnd = '';
+            }
+          }
+        });
+
+        // Re-layout after DOM change
+        requestAnimationFrame(() => {
+          layoutMasonry();
+          if (!expanded) {
+            // Scroll back to the photography section header
+            document.getElementById('photography').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    })();
+  </script>
+
+  <!-- SCROLL REVEAL SCRIPT -->
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          // stagger siblings
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          let delay = 0;
+          siblings.forEach((sib, idx) => {
+            if (sib === entry.target) delay = idx * 80;
+          });
+          setTimeout(() => entry.target.classList.add('visible'), delay);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+
+    // ── LIGHTBOX ──
+    const lightbox   = document.getElementById('lightbox');
+    const lbImg      = document.getElementById('lbImg');
+    const lbCaption  = document.getElementById('lbCaption');
+    const lbClose    = document.getElementById('lbClose');
+    const lbPrev     = document.getElementById('lbPrev');
+    const lbNext     = document.getElementById('lbNext');
+    const photoItems = document.querySelectorAll('.photo-item');
+    let currentIndex = 0;
+
+    function openLightbox(index) {
+      const item = photoItems[index];
+      const src  = item.dataset.src;
+      if (!src) return;
+      currentIndex     = index;
+      lbImg.src        = src;
+      lbCaption.textContent = item.dataset.caption || '';
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+      lbImg.src = '';
+    }
+
+    function navigate(dir) {
+      let next = currentIndex + dir;
+      if (next < 0) next = photoItems.length - 1;
+      if (next >= photoItems.length) next = 0;
+      openLightbox(next);
+    }
+
+    photoItems.forEach((item, i) => item.addEventListener('click', () => openLightbox(i)));
+    lbClose.addEventListener('click', closeLightbox);
+    lbPrev.addEventListener('click',  () => navigate(-1));
+    lbNext.addEventListener('click',  () => navigate(1));
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => {
+      if (!lightbox.classList.contains('open')) return;
+      if (e.key === 'Escape')     closeLightbox();
+      if (e.key === 'ArrowLeft')  navigate(-1);
+      if (e.key === 'ArrowRight') navigate(1);
+    });
+  </script>
+
+  <!-- Reel immersive idle logic -->
+  <script src="https://player.vimeo.com/api/player.js"></script>
+  <script>
+    (function () {
+      const hero = document.getElementById('hero');
+      let idleTimer = null;
+
+      // Overlay for mobile letterbox dim
+      const overlay = document.createElement('div');
+      overlay.className = 'mobile-immersive-overlay';
+      document.body.appendChild(overlay);
+
+      function isMobile() {
+        return window.innerWidth <= 600;
+      }
+
+      function enterImmersive() {
+        hero.classList.add('hero--immersive');
+        if (isMobile()) overlay.classList.add('visible');
+      }
+
+      function exitImmersive() {
+        hero.classList.remove('hero--immersive');
+        overlay.classList.remove('visible');
+      }
+
+      function resetTimer() {
+        clearTimeout(idleTimer);
+        exitImmersive();
+        idleTimer = setTimeout(enterImmersive, 5000);
+      }
+
+      // Start countdown immediately
+      idleTimer = setTimeout(enterImmersive, 5000);
+
+      // Scroll brings text back and restarts the clock
+      window.addEventListener('scroll', resetTimer, { passive: true });
+
+      // Mouse / touch activity also resets
+      ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(function (evt) {
+        window.addEventListener(evt, resetTimer, { passive: true });
+      });
+    })();
+  </script>
+
+</body>
+</html>
